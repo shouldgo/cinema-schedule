@@ -1,6 +1,8 @@
 """Output formatting for Apple Notes."""
 
 from datetime import date
+from urllib.parse import quote
+
 from dates import collapse_days
 
 
@@ -68,10 +70,12 @@ def format_schedule(
             day_range = collapse_days(dates)
             parts.append(f"{day_range} {time_str}, {cinema}")
 
+        encoded = quote(title)
+        title_link = f"[{title}](https://www.imdb.com/find/?q={encoded})"
         if len(parts) == 1:
-            lines.append(f"{title} — {parts[0]}")
+            lines.append(f"{title_link} — {parts[0]}")
         else:
-            lines.append(title)
+            lines.append(title_link)
             for part in parts:
                 lines.append(part)
         lines.append("---")
