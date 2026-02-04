@@ -4,16 +4,24 @@ Cinema schedule aggregator for 6 Krakow cinemas.
 
 ## Usage
 
+**CLI:**
 ```bash
 python3 cinema.py
 ```
-
 Prompts for date range and time filter, outputs to `schedule.md`.
+
+**GUI (Streamlit):**
+```bash
+./gui
+```
+Opens web interface at http://localhost:8501. Press Ctrl+C to stop.
 
 ## Structure
 
 ```
-cinema.py          # Entry point
+cinema.py          # CLI entry point
+gui.py             # Streamlit web interface
+core.py            # Shared logic (fetch, filter, count)
 fetch.py           # HTTP fetching with 1-hour cache
 formatting.py      # Apple Notes markdown output
 dates.py           # Polish dates, day collapsing
@@ -25,6 +33,16 @@ parsers/           # One file per cinema
   baranami.py
   kijow.py
 cache/             # HTML cache (gitignored)
+.venv/             # Python 3.12 virtualenv (streamlit requires 3.12, not 3.14)
+```
+
+## Dependencies
+
+GUI requires streamlit. Setup:
+```bash
+~/.pyenv/versions/3.12.8/bin/python3 -m venv .venv
+source .venv/bin/activate
+pip install streamlit
 ```
 
 ## Parser Notes
