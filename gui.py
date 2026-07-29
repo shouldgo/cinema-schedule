@@ -21,6 +21,8 @@ if "screenings" not in st.session_state:
     st.session_state.screenings = []
     st.session_state.status = []
     st.session_state.fetched = False
+if "excluded_titles" not in st.session_state:
+    st.session_state.excluded_titles = set()
 
 # Sidebar: inputs
 with st.sidebar:
@@ -82,6 +84,26 @@ else:
         max_time,
         cinema_set
     )
+
+    # Movie title filter (checkboxes with exclusion persistence)
+    all_titles = sorted(set(s["title"] for s in filtered), key=str.lower)
+
+    with st.expander(f"🎬 Filter movies ({len(all_titles)} total)"):
+        selected_titles = []
+        for title in all_titles:
+            checked = title not in st.session_state.excluded_titles
+            if st.checkbox(title, value=checked, key=f"movie_{title}"):
+                selected_titles.append(title)
+            else:
+                st.session_state.excluded_titles.add(title)
+        # Remove from excluded if checked back on
+        st.session_state.excluded_titles -= set(selected_titles)
+
+    if selected_titles:
+        title_set = set(selected_titles)
+        filtered = [s for s in filtered if s["title"] in title_set]
+    else:
+        filtered = []
 
     # Search box
     search = st.text_input("🔍 Search movies", placeholder="Type to filter...")
