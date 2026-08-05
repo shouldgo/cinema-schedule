@@ -12,39 +12,23 @@ def normalize_title(title: str) -> str:
 
 
 def format_schedule(
-    all_screenings: list[dict],
+    screenings: list[dict],
     from_date: date,
-    to_date: date,
-    min_time: str | None = None
+    to_date: date
 ) -> str:
     """
     Format screenings as markdown for Apple Notes.
 
-    Input: list of {title, date, time, day, cinema}
+    Input: pre-filtered list of {title, date, time, day, cinema}. Filtering is the
+    caller's job; from_date/to_date are used only for the header.
     Output: markdown string
     """
-    # Filter by date range and min time
-    filtered = []
-    for s in all_screenings:
-        try:
-            d = date.fromisoformat(s["date"])
-        except ValueError:
-            continue
-
-        if d < from_date or d > to_date:
-            continue
-
-        if min_time and s["time"] < min_time:
-            continue
-
-        filtered.append(s)
-
-    if not filtered:
+    if not screenings:
         return f"# Cinema Schedule: {from_date} → {to_date}\n\nNo screenings found."
 
     # Group by movie title
     movies = {}
-    for s in filtered:
+    for s in screenings:
         title = s["title"]
         if title not in movies:
             movies[title] = []
@@ -54,11 +38,9 @@ def format_schedule(
     lines = [f"# Cinema Schedule: {from_date} → {to_date}\n"]
 
     for title in sorted(movies.keys(), key=str.lower):
-        screenings = movies[title]
-
         # Group by (time, cinema)
         time_cinema_groups = {}
-        for s in screenings:
+        for s in movies[title]:
             key = (s["time"], s["cinema"])
             if key not in time_cinema_groups:
                 time_cinema_groups[key] = []

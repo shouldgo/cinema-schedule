@@ -8,12 +8,6 @@ POLISH_MONTHS = {
     'września': 9, 'października': 10, 'listopada': 11, 'grudnia': 12
 }
 
-POLISH_MONTHS_SHORT = {
-    'sty': 1, 'lut': 2, 'mar': 3, 'kwi': 4,
-    'maj': 5, 'cze': 6, 'lip': 7, 'sie': 8,
-    'wrz': 9, 'paź': 10, 'lis': 11, 'gru': 12
-}
-
 WEEKDAYS = ['poniedziałek', 'wtorek', 'środa', 'czwartek', 'piątek', 'sobota', 'niedziela']
 WEEKDAYS_SHORT = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd']
 
@@ -21,11 +15,6 @@ WEEKDAYS_SHORT = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd']
 def weekday_name(d: date) -> str:
     """Return Polish weekday name for a date."""
     return WEEKDAYS[d.weekday()]
-
-
-def weekday_short(d: date) -> str:
-    """Return short Polish weekday name for a date."""
-    return WEEKDAYS_SHORT[d.weekday()]
 
 
 def collapse_days(dates: list[date]) -> str:
