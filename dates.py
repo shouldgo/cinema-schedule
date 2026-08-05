@@ -9,7 +9,7 @@ POLISH_MONTHS = {
 }
 
 WEEKDAYS = ['poniedziałek', 'wtorek', 'środa', 'czwartek', 'piątek', 'sobota', 'niedziela']
-WEEKDAYS_SHORT = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd']
+WEEKDAYS_SHORT = ['pn', 'wt', 'śr', 'cz', 'pt', 'sb', 'nd']
 
 
 def weekday_name(d: date) -> str:
@@ -21,10 +21,19 @@ def collapse_days(dates: list[date]) -> str:
     """
     Collapse consecutive dates into ranges.
 
+    Always lowercase — capitalizing the first weekday is the caller's job, since
+    it depends on where the range lands in a line (see formatting.format_schedule).
+
+    Gapped runs join with ", ", the same separator formatting.format_schedule uses
+    between whole showtimes, so "pt, wt 20:30" is one 20:30 showtime and not a
+    timeless "pt" plus a separate "wt 20:30". Ambiguous on paper, but a bare weekday
+    with no time is meaningless, so it resolves on reading — accepted deliberately
+    over "/" separators or repeating the time per run, both of which read worse.
+
     Examples:
-        [Mon, Tue, Wed] -> "Pn-śr"
-        [Mon, Wed, Fri] -> "Pn, śr, pt"
-        [Mon, Tue, Thu, Fri] -> "Pn-wt, cz-pt"
+        [Mon, Tue, Wed] -> "pn-śr"
+        [Mon, Wed, Fri] -> "pn, śr, pt"
+        [Mon, Tue, Thu, Fri] -> "pn-wt, cz-pt"
     """
     if not dates:
         return ""
@@ -50,18 +59,12 @@ def collapse_days(dates: list[date]) -> str:
     # Format each run
     parts = []
     for run in runs:
-        if len(run) >= 3:
-            # Range: "Pn-śr"
-            start = WEEKDAYS_SHORT[run[0].weekday()].lower()
-            end = WEEKDAYS_SHORT[run[-1].weekday()].lower()
-            parts.append(f"{start.capitalize()}-{end}")
-        elif len(run) == 2:
-            # Two days: "Pn-wt"
-            start = WEEKDAYS_SHORT[run[0].weekday()].lower()
-            end = WEEKDAYS_SHORT[run[-1].weekday()].lower()
-            parts.append(f"{start.capitalize()}-{end}")
-        else:
-            # Single day
+        if len(run) == 1:
             parts.append(WEEKDAYS_SHORT[run[0].weekday()])
+        else:
+            # Range: "pn-śr"
+            start = WEEKDAYS_SHORT[run[0].weekday()]
+            end = WEEKDAYS_SHORT[run[-1].weekday()]
+            parts.append(f"{start}-{end}")
 
     return ", ".join(parts)
