@@ -64,7 +64,11 @@ Downstream sorting and filtering are plain string comparisons on `date` and `tim
 
 **Caching is central to parser development.** `fetch.fetch_html` returns cached HTML for an hour, so iterating on a regex re-parses the same bytes without hammering the cinema sites. Cache files are always written as UTF-8 regardless of source encoding (Barany is ISO-8859-2), so parsers always receive a `str` decoded from UTF-8.
 
-**Filtering happens once, in `cinema.main`.** `formatting.format_schedule` takes an already-filtered list and only groups and renders it — by title, then by `(time, cinema)`, collapsing consecutive dates via `dates.collapse_days` ("Pn-śr"). Its `from_date`/`to_date` args feed the header line, not a filter. Don't reintroduce filtering there.
+**Filtering happens once, in `cinema.main`.** `formatting.format_schedule` takes an already-filtered list and only groups and renders it — by title, then cinema, then time, collapsing consecutive dates via `dates.collapse_days` ("pn-śr"). Its `from_date`/`to_date` args feed the header line, not a filter. Don't reintroduce filtering there.
+
+`collapse_days` always returns lowercase; capitalizing the leading weekday is the caller's job, because it depends on where the range lands in a line (see Output Format). `format_schedule` does that with `line[0].upper() + line[1:]` — `str.capitalize()` would lowercase the cinema name at the end of the line.
+
+**One separator, two levels — deliberately.** `collapse_days` joins gapped day runs with `, `, and `format_schedule` joins whole showtimes with `, `, so `pt, wt 20:30, sb 18:00, Barany` is ambiguous on paper: `pt, wt 20:30` is one 20:30 showtime, but parses as a timeless `pt` plus a separate `wt 20:30`. Roughly 9 of 106 cinema lines a week. Left as-is on purpose — a bare weekday with no time is meaningless, so a reader resolves it. Both fixes were rendered on real data and rejected as worse: `/` between gapped runs (`Śr-cz/sb/pn 18:30`) collides visually with the `-` in ranges, and repeating the time per run (`Śr-cz 18:30, sb 18:30, pn 18:30`) is verbose. Don't re-litigate without looking at the rendered output.
 
 ## Parser Notes
 
@@ -96,10 +100,20 @@ Markup is inconsistent enough that anchor-text regexes need to tolerate several 
 ```markdown
 # Cinema Schedule: 2026-02-04 → 2026-02-10
 
-[Hamnet](https://www.imdb.com/find/?q=Hamnet)
-Wt-czw 17:30, KIKA
-Wt-czw 19:45, Paradox
+**Zaproszenie** ([IMDB](https://www.imdb.com/find/?q=Zaproszenie))
+Pn-cz 18:00, pn-cz 20:15, KIKA
+Pn-śr 20:15, cz 20:30, Barany
+Pn-śr 20:25, cz 18:15, Kijów
 ---
-[La Grazia](https://www.imdb.com/find/?q=La%20Grazia) — Wt-czw 20:00, KIKA
+**Hamnet** ([IMDB](https://www.imdb.com/find/?q=Hamnet)) — pt, wt 20:30, sb 18:00, Barany
+---
+**La Grazia** ([IMDB](https://www.imdb.com/find/?q=La%20Grazia)) — wt-cz 20:00, KIKA
 ```
-Single-group movies go on one line with an em dash; multi-group movies get a title line followed by one line per `(time, cinema)`. Titles link to an IMDb search.
+
+**One line per cinema**, carrying all of that cinema's showtimes. A movie playing at a single cinema collapses onto the title line after an em dash; two or more cinemas get a title line followed by one line each. The title is bold and the IMDb search link is a separate `([IMDB](…))` suffix.
+
+Ordering: cinema lines by that cinema's earliest `(date, time)`; showtimes within a line by the segment's earliest date, ties broken by time (hence `Pn-śr 20:25, cz 18:15` — not sorted by clock time).
+
+`, ` separates both showtimes and gapped day runs, so `pt, wt 20:30` is a single 20:30 showtime on Friday and Tuesday — see the architecture note above for why that collision is intentional.
+
+Capitalization: the leading weekday is capitalized at the start of a cinema line, and stays lowercase after the em dash and for every later segment on a line.

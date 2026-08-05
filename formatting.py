@@ -34,32 +34,38 @@ def format_schedule(
             movies[title] = []
         movies[title].append(s)
 
-    # For each movie, group screenings by (time, cinema)
     lines = [f"# Cinema Schedule: {from_date} → {to_date}\n"]
 
     for title in sorted(movies.keys(), key=str.lower):
-        # Group by (time, cinema)
-        time_cinema_groups = {}
+        # Group by cinema, then by time within that cinema
+        cinema_times = {}
         for s in movies[title]:
-            key = (s["time"], s["cinema"])
-            if key not in time_cinema_groups:
-                time_cinema_groups[key] = []
-            time_cinema_groups[key].append(date.fromisoformat(s["date"]))
+            cinema_times.setdefault(s["cinema"], {}).setdefault(s["time"], []) \
+                .append(date.fromisoformat(s["date"]))
 
-        # Format each group
-        parts = []
-        for (time_str, cinema), dates in sorted(time_cinema_groups.items()):
-            day_range = collapse_days(dates)
-            parts.append(f"{day_range} {time_str}, {cinema}")
+        # One line per cinema: every showtime there, earliest date first
+        cinema_lines = []
+        for cinema, times in cinema_times.items():
+            segments = sorted(
+                ((min(dates), time_str, f"{collapse_days(dates)} {time_str}")
+                 for time_str, dates in times.items())
+            )
+            line = ", ".join(seg[2] for seg in segments) + f", {cinema}"
+            cinema_lines.append((segments[0][:2], line))
+
+        # Cinemas ordered by their earliest (date, time)
+        cinema_lines.sort()
 
         encoded = quote(title)
-        title_link = f"[{title}](https://www.imdb.com/find/?q={encoded})"
-        if len(parts) == 1:
-            lines.append(f"{title_link} — {parts[0]}")
+        title_link = f"**{title}** ([IMDB](https://www.imdb.com/find/?q={encoded}))"
+        if len(cinema_lines) == 1:
+            # Mid-sentence after the em dash, so the weekday stays lowercase
+            lines.append(f"{title_link} — {cinema_lines[0][1]}")
         else:
             lines.append(title_link)
-            for part in parts:
-                lines.append(part)
+            for _, line in cinema_lines:
+                # Not .capitalize(): it would lowercase the cinema name too
+                lines.append(line[0].upper() + line[1:])
         lines.append("---")
 
     # Remove trailing separator
