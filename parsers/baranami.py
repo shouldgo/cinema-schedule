@@ -33,7 +33,8 @@ def parse(html: str) -> list[dict]:
         day_name = DAYS_PL.get(day_name_raw, day_name_raw.lower())
         month = POLISH_MONTHS.get(month_name.lower(), 1)
 
-        # Infer year from onclick handlers
+        # Infer year from onclick handlers. Fallback is hardcoded, so a markup change
+        # to the handler silently dates every screening to 2026.
         year_match = re.search(r"validateAndShowOrderDialog\([^,]+,[^,]+,'(\d{4})'", content)
         year = year_match.group(1) if year_match else "2026"
 

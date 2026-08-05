@@ -47,7 +47,8 @@ def parse(html: str) -> list[dict]:
             time_str = time_match.group(1).strip()
 
             # Extract Polish title from anchor text (not title attribute which has original title)
-            # Handle optional <b> tag and whitespace: <a href="..."><b>TITLE</b> </a>
+            # Handle optional <b> tag and whitespace. All of these occur in the wild:
+            #   >TITLE</a>   ><b>TITLE</b></a>   ><b>TITLE</b> </a>   ><b>TITLE </b> </a>
             title_match = re.search(r'<a[^>]*href="film\.php[^"]*"[^>]*>\s*(?:<b>)?([^<]+)(?:</b>)?\s*</a>', row)
             if not title_match:
                 continue

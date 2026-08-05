@@ -47,7 +47,9 @@ def parse(html: str) -> list[dict]:
 
             day_num, month = int(dm[0]), int(dm[1])
 
-            # Infer year - if month < today's month and we're late in year, it's next year
+            # Infer year - if month < today's month and we're late in year, it's next year.
+            # Only correct for a Dec->Jan rollover; any other backwards month keeps the
+            # current year and lands the date in the past.
             year = current_year
             if month < today.month and today.month >= 10:
                 year = current_year + 1
