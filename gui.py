@@ -154,6 +154,8 @@ else:
     # Export button
     st.divider()
     if st.button("📥 Export to schedule.md"):
+        # Exports from the unfiltered list, so the cinema and movie-title filters
+        # above do not affect schedule.md - only the date range and min time do.
         output = format_schedule(
             st.session_state.screenings,
             from_date,
