@@ -15,7 +15,7 @@ USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
 CINEMAS = {
     "kika": ("https://bilety.kinokika.pl", "utf-8"),
     "mikro": ("https://kinomikro.pl/repertoire/?view=all", "utf-8"),
-    "agrafka": ("https://kinoagrafka.pl/rep.php", "utf-8"),
+    "agrafka": ("https://bilety.kinoagrafka.pl", "utf-8"),
     "paradox": ("https://kinoparadox.pl/repertuar/", "utf-8"),
     "baranami": ("https://www.kinopodbaranami.pl/repertuar.php", "iso-8859-2"),
     "kijow": ("https://kupbilet.kijow.pl/MSI/mvc/pl", "utf-8"),

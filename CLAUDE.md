@@ -31,7 +31,7 @@ printf '\n\n17:00\n' | python3 cinema.py   # defaults for both dates, 17:00 earl
 ```bash
 python3 -c "
 from fetch import fetch_html
-from parsers.agrafka import parse
+from parsers.kika import parse
 r = parse(fetch_html('agrafka'))
 print(len(r)); print(r[:3])"
 ```
@@ -60,7 +60,7 @@ cinema.py ─→ fetch.py ─→ cache/*.html
 
 Downstream sorting and filtering are plain string comparisons on `date` and `time`, so zero-padding is mandatory (`f"{month:02d}"`, `.zfill(2)`).
 
-**Everything is regex, no HTML library.** The stdlib-only footprint is deliberate. Parsers work by slicing HTML between successive anchor matches (KIKA, Paradox) or `re.split` on date separators (Mikro, Agrafka, Barany), then running field regexes inside each block.
+**Everything is regex, no HTML library.** The stdlib-only footprint is deliberate. Parsers work by slicing HTML between successive anchor matches (KIKA, Paradox) or `re.split` on date separators (Mikro, Barany), then running field regexes inside each block.
 
 **Caching is central to parser development.** `fetch.fetch_html` returns cached HTML for an hour, so iterating on a regex re-parses the same bytes without hammering the cinema sites. Cache files are always written as UTF-8 regardless of source encoding (Barany is ISO-8859-2), so parsers always receive a `str` decoded from UTF-8.
 
@@ -75,8 +75,8 @@ Downstream sorting and filtering are plain string comparisons on `date` and `tim
 | Cinema | Key | Structure |
 |--------|-----|-----------|
 | KIKA | `kika` | FLAT — ISO date embedded in the row's `class` attr |
+| Agrafka | `agrafka` | Same booking-system template as KIKA — reuses `parsers/kika.py` verbatim, just fetched from `bilety.kinoagrafka.pl` |
 | Mikro | `mikro` | DATE-FIRST — `repertoire-separator` divs |
-| Agrafka | `agrafka` | DATE-FIRST — tables; strip HTML comments first |
 | Paradox | `paradox` | DATE-FIRST — `data-date` attr |
 | Barany | `baranami` | DATE-FIRST — ISO-8859-2 source encoding |
 | Kijów | `kijow` | JS extraction from an embedded data literal |
@@ -90,10 +90,6 @@ Cinemas often carry both: `<a title="Marty Supreme">Wielki Marty</a>`. Using the
 ### Year inference
 
 Mikro and Barany omit the year from their markup and reconstruct it. Both reconstructions have known failure modes, documented at the code sites — start there if dates land in the wrong year.
-
-### Agrafka HTML quirks
-
-Markup is inconsistent enough that anchor-text regexes need to tolerate several `<b>`/whitespace variants; see the comment above the title regex in `parsers/agrafka.py`. The page also carries a large block of stale data inside HTML comments, which `parse` strips before anything else.
 
 ## Output Format
 
