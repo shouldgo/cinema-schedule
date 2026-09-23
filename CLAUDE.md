@@ -101,11 +101,13 @@ Barany omits the year from its markup and reconstructs it. The reconstruction ha
 Pn-cz 18:00, pn-cz 20:15, KIKA
 Pn-śr 20:15, cz 20:30, Barany
 Pn-śr 20:25, cz 18:15, Kijów
----
+
 **Hamnet** ([IMDB](https://www.imdb.com/find/?q=Hamnet)) — pt, wt 20:30, sb 18:00, Barany
----
+
 **La Grazia** ([IMDB](https://www.imdb.com/find/?q=La%20Grazia)) — wt-cz 20:00, KIKA
 ```
+
+**Movies are separated by a blank line, no `---` dividers.** Dividers were dropped: a `---` directly under text is a setext underline that turns the whole movie block into an H2, and even with blank lines around them they didn't read well.
 
 **One line per cinema**, carrying all of that cinema's showtimes. A movie playing at a single cinema collapses onto the title line after an em dash; two or more cinemas get a title line followed by one line each. The title is bold and the IMDb search link is a separate `([IMDB](…))` suffix.
 

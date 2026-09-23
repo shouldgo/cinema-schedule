@@ -66,10 +66,9 @@ def format_schedule(
             for _, line in cinema_lines:
                 # Not .capitalize(): it would lowercase the cinema name too
                 lines.append(line[0].upper() + line[1:])
-        lines.append("---")
+        lines.append("")
 
-    # Remove trailing separator
-    if lines and lines[-1] == "---":
-        lines.pop()
+    # Remove trailing blank line
+    lines.pop()
 
     return "\n".join(lines)
