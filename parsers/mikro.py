@@ -1,83 +1,50 @@
-"""Parser for Mikro cinema (kinomikro.pl)."""
+"""Parser for Mikro cinema (kinomikro.pl).
 
-import re
+The site renders its repertoire client-side from a JSON API on
+bilety.kinomikro.pl, so this parses JSON rather than HTML. One feed covers
+both venues; they are told apart by `location.id`.
+"""
+
+import json
 from datetime import date
-from dates import weekday_name, WEEKDAYS
+from dates import weekday_name
 from formatting import normalize_title
 
+# Sala Mikro + Sala Mikroffala at ul. Lea 5 — the site's own JS groups these.
+MIKRO_LOCATIONS = {3, 13}
+# Galeria Bronowice, ul. Stawowa 61.
+BRONOWICE_LOCATIONS = {8}
 
-def parse(html: str) -> list[dict]:
+
+def _parse(text: str, location_ids: set[int]) -> list[dict]:
     """
-    Parse Mikro HTML.
+    Parse the repertoire JSON, keeping screenings at the given locations.
     Returns list of {title, date, time, day}.
     """
     results = []
-    today = date.today()
-    current_year = today.year
+    for item in json.loads(text)["repertoires"].values():
+        if item["location"]["id"] not in location_ids:
+            continue
 
-    # Split by date separators
-    sections = re.split(r'<div class="repertoire-separator">([^<]+)</div>', html)
+        # "2026-09-23T12:00:00+02:00" — already Warsaw local time, zero-padded.
+        stamp = item["date"]
+        iso_date = stamp[:10]
 
-    # sections[0] is content before first separator
-    # sections[1] is first date, sections[2] is content after first date, etc.
-    for i in range(1, len(sections), 2):
-        if i + 1 >= len(sections):
-            break
-
-        date_str = sections[i].strip()
-        content = sections[i + 1]
-
-        # Handle "Dzisiaj" (Today)
-        if date_str == "Dzisiaj":
-            iso_date = today.isoformat()
-            day_name = weekday_name(today)
-        else:
-            # Parse "sobota - 24/1" or "piątek - 7/2"
-            parts = date_str.split(' - ')
-            if len(parts) != 2:
-                continue
-
-            day_name = parts[0].strip().lower()
-            date_part = parts[1].strip()
-
-            # Parse DD/M or D/M
-            dm = date_part.split('/')
-            if len(dm) != 2:
-                continue
-
-            day_num, month = int(dm[0]), int(dm[1])
-
-            # Infer year - if month < today's month and we're late in year, it's next year.
-            # Only correct for a Dec->Jan rollover; any other backwards month keeps the
-            # current year and lands the date in the past.
-            year = current_year
-            if month < today.month and today.month >= 10:
-                year = current_year + 1
-
-            iso_date = f"{year}-{month:02d}-{day_num:02d}"
-
-        # Find all repertoire items
-        item_pattern = r'<div class="repertoire-item[^"]*"[^>]*>(.*?)</div>\s*</div>'
-        for item_match in re.finditer(item_pattern, content, re.DOTALL):
-            item = item_match.group(1)
-
-            # Extract time
-            time_match = re.search(r'<p class="repertoire-item-hour">([^<]+)</p>', item)
-            if not time_match:
-                continue
-            time_str = time_match.group(1).strip()
-
-            # Extract title
-            title_match = re.search(r'repertoire-item-title"[^>]*>([^<]+)</a>', item)
-            if not title_match:
-                continue
-            title = normalize_title(title_match.group(1))
-
-            results.append({
-                "title": title,
-                "date": iso_date,
-                "time": time_str,
-                "day": day_name,
-            })
+        results.append({
+            "title": normalize_title(item["title"]),
+            "date": iso_date,
+            "time": stamp[11:16],
+            "day": weekday_name(date.fromisoformat(iso_date)),
+        })
 
     return results
+
+
+def parse(text: str) -> list[dict]:
+    """Mikro (Lea 5) screenings."""
+    return _parse(text, MIKRO_LOCATIONS)
+
+
+def parse_bronowice(text: str) -> list[dict]:
+    """Mikro Bronowice screenings."""
+    return _parse(text, BRONOWICE_LOCATIONS)

@@ -11,10 +11,14 @@ CACHE_MAX_AGE = 3600  # 1 hour
 
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
 
+# Mikro's JSON feed covers both of its venues
+MIKRO_API = "https://bilety.kinomikro.pl/service.php/repertoire/list.json?limit=300&advanced=1"
+
 # Cinema URLs and their encodings
 CINEMAS = {
     "kika": ("https://bilety.kinokika.pl", "utf-8"),
-    "mikro": ("https://kinomikro.pl/repertoire/?view=all", "utf-8"),
+    "mikro": (MIKRO_API, "utf-8"),
+    "mikro_bronowice": (MIKRO_API, "utf-8"),  # same feed, parser filters by venue
     "agrafka": ("https://bilety.kinoagrafka.pl", "utf-8"),
     "paradox": ("https://kinoparadox.pl/repertuar/", "utf-8"),
     "baranami": ("https://www.kinopodbaranami.pl/repertuar.php", "iso-8859-2"),
