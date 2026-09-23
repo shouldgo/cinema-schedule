@@ -80,7 +80,7 @@ Downstream sorting and filtering are plain string comparisons on `date` and `tim
 | Mikro Bronowice | `mikro_bronowice` | Same feed as Mikro, `parsers/mikro.py:parse_bronowice`; keeps `location.id` 8 (Galeria Bronowice) |
 | Paradox | `paradox` | DATE-FIRST — `data-date` attr |
 | Barany | `baranami` | DATE-FIRST — ISO-8859-2 source encoding |
-| Kijów | `kijow` | JS extraction from an embedded data literal |
+| Kijów | `kijow` | JS extraction from an embedded data literal; drops `SPEKTAKL - ` prefixed events (theatre) — the feed has no structured category, so the anchored title prefix is the only signal |
 
 ### Title extraction policy
 

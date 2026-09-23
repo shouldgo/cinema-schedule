@@ -6,6 +6,11 @@ from datetime import date
 from dates import weekday_name
 from formatting import normalize_title
 
+# Theatre shows share the feed with films and carry no category field anywhere
+# (JS, list HTML, detail pages) — the venue's "SPEKTAKL - " title prefix is the
+# only signal. Anchored and dash-required so films merely containing the word pass.
+THEATRE = re.compile(r"^\s*spektakl\s+-\s+", re.IGNORECASE)
+
 
 def parse(html: str) -> list[dict]:
     """
@@ -21,7 +26,10 @@ def parse(html: str) -> list[dict]:
         _, name, date_str, hour = match.groups()
 
         # Decode HTML entities and normalize
-        title = normalize_title(html_module.unescape(name))
+        name = html_module.unescape(name)
+        if THEATRE.match(name):
+            continue
+        title = normalize_title(name)
 
         # Convert DD.MM.YYYY to YYYY-MM-DD
         parts = date_str.split('.')
