@@ -2,6 +2,7 @@
 
 import os
 import time
+from datetime import date
 from pathlib import Path
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
@@ -14,7 +15,19 @@ USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
 # Mikro's JSON feed covers both of its venues
 MIKRO_API = "https://bilety.kinomikro.pl/service.php/repertoire/list.json?limit=300&advanced=1"
 
-# Cinema URLs and their encodings
+KIJOW_MONTH = "https://kupbilet.kijow.pl/MSI/mvc/pl?sort=Date&date={}"
+
+
+def kijow_urls() -> list[str]:
+    """Kijów pages by calendar month; fetch this month and next so late-month
+    runs still see the coming week."""
+    today = date.today()
+    nxt = date(today.year + today.month // 12, today.month % 12 + 1, 1)
+    return [KIJOW_MONTH.format(d.strftime("%Y-%m")) for d in (today, nxt)]
+
+
+# Cinema URLs and their encodings; a URL may be a callable returning several
+# URLs, whose bodies are concatenated into one cache file
 CINEMAS = {
     "kika": ("https://bilety.kinokika.pl", "utf-8"),
     "mikro": (MIKRO_API, "utf-8"),
@@ -22,7 +35,7 @@ CINEMAS = {
     "agrafka": ("https://bilety.kinoagrafka.pl", "utf-8"),
     "paradox": ("https://kinoparadox.pl/repertuar/", "utf-8"),
     "baranami": ("https://www.kinopodbaranami.pl/repertuar.php", "iso-8859-2"),
-    "kijow": ("https://kupbilet.kijow.pl/MSI/mvc/pl", "utf-8"),
+    "kijow": (kijow_urls, "utf-8"),
 }
 
 
@@ -58,13 +71,16 @@ def fetch_html(cinema: str, force: bool = False) -> str | None:
 
     # Fetch from web
     try:
-        req = Request(url, headers={"User-Agent": USER_AGENT})
-        with urlopen(req, timeout=30) as response:
-            raw = response.read()
-            html = raw.decode(encoding, errors='replace')
-            # Save to cache
-            path.write_text(html, encoding='utf-8')
-            return html
+        urls = url() if callable(url) else [url]
+        pages = []
+        for u in urls:
+            req = Request(u, headers={"User-Agent": USER_AGENT})
+            with urlopen(req, timeout=30) as response:
+                pages.append(response.read().decode(encoding, errors='replace'))
+        html = "\n".join(pages)
+        # Save to cache
+        path.write_text(html, encoding='utf-8')
+        return html
     except (URLError, HTTPError, TimeoutError) as e:
         return None
 

@@ -80,7 +80,7 @@ Downstream sorting and filtering are plain string comparisons on `date` and `tim
 | Mikro Bronowice | `mikro_bronowice` | Same feed as Mikro, `parsers/mikro.py:parse_bronowice`; keeps `location.id` 8 (Galeria Bronowice) |
 | Paradox | `paradox` | DATE-FIRST — `data-date` attr |
 | Barany | `baranami` | DATE-FIRST — ISO-8859-2 source encoding |
-| Kijów | `kijow` | JS extraction from an embedded data literal; drops `SPEKTAKL - ` prefixed events (theatre) — the feed has no structured category, so the anchored title prefix is the only signal |
+| Kijów | `kijow` | JS extraction from an embedded data literal. The site pages by calendar month (`?date=YYYY-MM`), so `fetch.kijow_urls` fetches this month + next and `fetch_html` concatenates them into one cache file (a range starting 2+ months out would still miss Kijów); drops `SPEKTAKL - ` prefixed events (theatre) — the feed has no structured category, so the anchored title prefix is the only signal |
 
 ### Title extraction policy
 
